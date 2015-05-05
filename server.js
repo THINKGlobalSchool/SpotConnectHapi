@@ -153,6 +153,7 @@ routes.push({
 	}
 });
 
+
 routes.push({
 	'method': 'POST', 
 	'path': '/api/photos.post',
@@ -167,23 +168,60 @@ routes.push({
 				rejectUnauthorized: false,
 				onResponse: function(err, res, request, reply, settings, ttl) {
 					if (err) {
-						reply({
-			        		'status': -1,
-					        'error': err
-					    }).code(500);
+						reply(err).code(500);
 						return;
 					}
 					
-					// Use Wreck to read (or modify) the response
-					Wreck.read(res, {json: true}, function (err, payload) {
-						server.log('info', payload); // Just echoing the output for now
-						reply(payload);
+					Wreck.read(res, {json: 'true'}, function (err, payload) {
+						server.log('info', payload);
+						reply(res).ttl(ttl).passThrough(true);
 					});
+
+					
 				}
 			});
+
+			// NOTE: I could do this globally and skip manual requests
 		},
 		payload: {
-			parse: false
+			parse: false,
+			maxBytes: 1048576 * 100,
+			output: 'stream'
+		}
+	}
+});
+
+routes.push({
+	'method': 'POST', 
+	'path': '/api/photos.finalize.post',
+	'config': {
+		handler: function(request, reply) {
+			server.log('info', 'Calling [' + request.method + '] ' + request.route.path);
+
+			var endpoint = spotEndpoint + '?method=photos.finalize.post';
+
+			Request.post(
+		   		endpoint,
+			    {	
+			    	form: {
+				    	batch: request.payload.batch,
+				    	api_key: request.payload.api_key,
+				    	auth_token: request.payload.auth_token
+			   		},
+			   		rejectUnauthorized: false
+				},
+			    function (error, response, body) {
+			        if (!error && response.statusCode == 200) {
+			            server.log('info', body);
+			            reply(body);
+			        } else {
+			        	reply({
+			        		'status': -1,
+					        'error': error
+					    });
+			        }	        
+			    }
+			);
 		}
 	}
 });
