@@ -173,8 +173,10 @@ routes.push({
 					}
 					
 					Wreck.read(res, {json: 'true'}, function (err, payload) {
+						server.log('info', 'HAY');
 						server.log('info', payload);
-						reply(res).ttl(ttl).passThrough(true);
+						reply(payload);
+						//reply(res).ttl(ttl).passThrough(true);
 					});
 
 					
@@ -266,6 +268,38 @@ routes.push({
 			var params = request.url.query;
 
 			params.method = "util.ping";
+
+			var endpoint = spotEndpoint + '?' + qs.stringify(params);
+
+			Request.get(
+		   		endpoint,
+			    {rejectUnauthorized: false},
+			    function (error, response, body) {
+			        if (!error && response.statusCode == 200) {
+			            server.log('info', body);
+			            reply(body);
+			        } else {
+			        	reply({
+			        		'status': -1,
+					        'error': error
+					    });
+			        }	        
+			    }
+	);
+		}
+	}
+});
+
+routes.push({
+	'method': 'GET', 
+	'path': '/api/albums.list',
+	'config': {
+		handler: function(request, reply) {
+			server.log('info', 'Calling [' + request.method + '] ' + request.route.path);
+
+			var params = request.url.query;
+
+			params.method = "albums.list";
 
 			var endpoint = spotEndpoint + '?' + qs.stringify(params);
 
