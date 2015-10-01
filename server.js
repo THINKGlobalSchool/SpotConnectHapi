@@ -173,7 +173,6 @@ routes.push({
 					}
 					
 					Wreck.read(res, {json: 'true'}, function (err, payload) {
-						server.log('info', 'HAY');
 						server.log('info', payload);
 						reply(payload);
 						//reply(res).ttl(ttl).passThrough(true);
@@ -207,6 +206,7 @@ routes.push({
 			    {	
 			    	form: {
 				    	batch: request.payload.batch,
+				    	album: request.payload.album,
 				    	api_key: request.payload.api_key,
 				    	auth_token: request.payload.auth_token
 			   		},
